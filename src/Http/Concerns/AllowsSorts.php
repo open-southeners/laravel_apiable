@@ -26,7 +26,7 @@ trait AllowsSorts
      */
     public function sorts(): array
     {
-        $sortsSourceArr = array_filter(explode(',', $this->request->get('sort', '')));
+        $sortsSourceArr = array_filter(explode(',', $this->queryParameters()->get('sort', [''])[0]));
         $sortsArr = [];
 
         while ($sort = array_pop($sortsSourceArr)) {

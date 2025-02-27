@@ -2,7 +2,7 @@
 
 namespace OpenSoutheners\LaravelApiable\Attributes;
 
-class QueryParam
+abstract class QueryParam
 {
     //
 }

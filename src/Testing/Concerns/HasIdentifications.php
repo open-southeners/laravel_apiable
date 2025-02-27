@@ -2,6 +2,8 @@
 
 namespace OpenSoutheners\LaravelApiable\Testing\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
+use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 /**
@@ -37,11 +39,15 @@ trait HasIdentifications
     /**
      * Check that a resource has the specified type.
      *
-     * @param  mixed  $value
+     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $value
      * @return $this
      */
-    public function hasType($value)
+    public function hasType(string $value)
     {
+        if (class_exists($value) && is_a($value, Model::class, true)) {
+            $value = Apiable::getResourceType($value);
+        }
+
         PHPUnit::assertSame($this->type, $value, sprintf('JSON:API response does not have type "%s"', $value));
 
         return $this;

@@ -61,7 +61,7 @@ class ApplyFiltersToQuery implements HandlesRequestQueries
                     $isScope => $this->applyFilterAsScope($query, $relationship, $scopeName, $operator, $value, $condition),
                     default => null,
                 };
-            }, $query, $filterAttribute, $filterValues);
+            }, $query, $filterAttribute, (array) $filterValues);
         }
 
         return $query;
@@ -71,9 +71,9 @@ class ApplyFiltersToQuery implements HandlesRequestQueries
      * Wrap query if relationship found applying its operator and conditional to the filtered attribute.
      *
      * @param  callable(\Illuminate\Database\Eloquent\Builder, string|null, string, string, string, string): mixed  $callback
-     * @param  array<string>|string  $filterValues
+     * @param  array<string|array>  $filterValues
      */
-    protected function wrapIfRelatedQuery(callable $callback, Builder $query, string $filterAttribute, array|string $filterValues): void
+    protected function wrapIfRelatedQuery(callable $callback, Builder $query, string $filterAttribute, array $filterValues): void
     {
         $systemPreferredOperator = $this->allowed[$filterAttribute]['operator'];
 

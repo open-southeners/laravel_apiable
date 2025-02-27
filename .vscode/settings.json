@@ -1,3 +1,4 @@
 {
-  "php-cs-fixer.executablePath": "${workspaceFolder}/vendor/bin/php-cs-fixer"
+  "php-cs-fixer.executablePath": "${workspaceFolder}/vendor/bin/php-cs-fixer",
+  "php.version": "8.3.1"
 }

@@ -3,7 +3,6 @@
 namespace OpenSoutheners\LaravelApiable\Http;
 
 use Closure;
-use Exception;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Responsable;
@@ -12,9 +11,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Traits\ForwardsCalls;
 use OpenSoutheners\LaravelApiable\Contracts\ViewableBuilder;
 use OpenSoutheners\LaravelApiable\Contracts\ViewQueryable;
+use OpenSoutheners\LaravelApiable\ServiceProvider;
 use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -22,17 +21,16 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 /**
  * @template T of \Illuminate\Database\Eloquent\Model
  *
- * @mixin \OpenSoutheners\LaravelApiable\Http\RequestQueryObject<T>
+ * @template-extends \OpenSoutheners\LaravelApiable\Http\RequestQueryObject<T>
+ *
+ * @mixin \Illuminate\Database\Eloquent\Builder<T>
  */
-class JsonApiResponse implements Arrayable, Responsable
+class JsonApiResponse extends RequestQueryObject implements Arrayable, Responsable
 {
     use Concerns\IteratesResultsAfterQuery;
     use Concerns\ResolvesFromRouteAction;
-    use ForwardsCalls;
 
     protected Pipeline $pipeline;
-
-    protected ?RequestQueryObject $request;
 
     /**
      * @var class-string<T>|class-string<\OpenSoutheners\LaravelApiable\Contracts\ViewQueryable<T>>
@@ -55,9 +53,9 @@ class JsonApiResponse implements Arrayable, Responsable
      *
      * @return void
      */
-    public function __construct(Request $request)
+    public function __construct(public Request $request)
     {
-        $this->request = new RequestQueryObject($request);
+        parent::__construct($request);
 
         $this->pipeline = app(Pipeline::class);
 
@@ -86,25 +84,17 @@ class JsonApiResponse implements Arrayable, Responsable
         /** @var \Illuminate\Database\Eloquent\Builder<T>|\OpenSoutheners\LaravelApiable\Contracts\ViewableBuilder<T> $query */
         $query = is_string($modelOrQuery) ? $modelOrQuery::query() : clone $modelOrQuery;
 
-        $this->request->setQuery($query);
+        $this->setQuery($query);
 
         return $this;
     }
 
     /**
      * Build pipeline and return resulting request query object instance.
-     *
-     * @return \OpenSoutheners\LaravelApiable\Http\RequestQueryObject
-     *
-     * @throws \Exception
      */
-    protected function buildPipeline()
+    protected function buildPipeline(): self
     {
-        if (! $this->request?->query) {
-            throw new Exception('RequestQueryObject needs a base query to work, none provided');
-        }
-
-        return $this->pipeline->send($this->request)
+        return $this->pipeline->send($this)
             ->via('from')
             ->through([
                 ApplyFulltextSearchToQuery::class,
@@ -117,8 +107,18 @@ class JsonApiResponse implements Arrayable, Responsable
 
     /**
      * Get single resource from response.
+     *
+     * @deprecated use single() instead
      */
     public function gettingOne(): self
+    {
+        return $this->single();
+    }
+
+    /**
+     * Get single resource from response.
+     */
+    public function single(): self
     {
         $this->singleResourceResponse = true;
 
@@ -138,17 +138,18 @@ class JsonApiResponse implements Arrayable, Responsable
     /**
      * Get results from processing RequestQueryObject pipeline.
      */
-    public function getResults(Guard $guard): mixed
+    public function getResults(): mixed
     {
         $query = $this->buildPipeline()->query;
 
         if (
-            Apiable::config('responses.viewable')
+            app()->bound(Guard::class)
+            && Apiable::config('responses.viewable')
             && (is_a($this->model, ViewQueryable::class, true)
                 || is_a($query, ViewableBuilder::class))
         ) {
             /** @var \OpenSoutheners\LaravelApiable\Contracts\ViewableBuilder<T> $query */
-            $query->viewable($guard->user());
+            $query->viewable(app(Guard::class)->user());
         }
 
         return $this->resultPostProcessing(
@@ -181,10 +182,9 @@ class JsonApiResponse implements Arrayable, Responsable
             ? call_user_func_array($this->pagination, [$response])
             : $response;
 
-        $request = $this->request->getRequest();
-        $requesterAccepts = $request->header('Accept');
+        $requesterAccepts = $this->request->header('Accept');
 
-        if ($this->withinInertia($request) || $requesterAccepts === null || Apiable::config('responses.formatting.force')) {
+        if ($this->withinInertia($this->request) || $requesterAccepts === null || Apiable::config('responses.formatting.force')) {
             $requesterAccepts = Apiable::config('responses.formatting.type');
         }
 
@@ -216,7 +216,7 @@ class JsonApiResponse implements Arrayable, Responsable
     public function toResponse($request): mixed
     {
         /** @var \Illuminate\Contracts\Support\Responsable|mixed $results */
-        $results = App::call([$this, 'getResults']);
+        $results = $this->getResults();
 
         $response = $results instanceof Responsable
             ? $results->toResponse($request)
@@ -256,7 +256,7 @@ class JsonApiResponse implements Arrayable, Responsable
             $type = $this->model;
         }
 
-        $resourceType = class_exists($type) ? Apiable::getResourceType($type) : $type;
+        $resourceType = class_exists($type) ? ServiceProvider::getTypeForModel($type) : $type;
 
         $this->forceAppends = array_merge_recursive($this->forceAppends, [$resourceType => $attributes]);
 
@@ -309,13 +309,5 @@ class JsonApiResponse implements Arrayable, Responsable
         Apiable::forceResponseFormatting($format);
 
         return $this;
-    }
-
-    /**
-     * Call method of RequestQueryObject if not exists on this.
-     */
-    public function __call(string $name, array $arguments): mixed
-    {
-        return $this->forwardDecoratedCallTo($this->request, $name, $arguments);
     }
 }

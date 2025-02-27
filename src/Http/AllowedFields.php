@@ -3,7 +3,7 @@
 namespace OpenSoutheners\LaravelApiable\Http;
 
 use Illuminate\Contracts\Support\Arrayable;
-use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
+use OpenSoutheners\LaravelApiable\ServiceProvider;
 
 class AllowedFields implements Arrayable
 {
@@ -22,7 +22,7 @@ class AllowedFields implements Arrayable
      */
     public function __construct(string $type, string|array $attributes)
     {
-        $this->type = class_exists($type) ? Apiable::getResourceType($type) : $type;
+        $this->type = class_exists($type) ? ServiceProvider::getTypeForModel($type) : $type;
         $this->attributes = (array) $attributes;
     }
 

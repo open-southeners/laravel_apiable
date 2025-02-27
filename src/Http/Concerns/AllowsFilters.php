@@ -6,7 +6,6 @@ use Exception;
 use OpenSoutheners\LaravelApiable\Http\AllowedFilter;
 use OpenSoutheners\LaravelApiable\Http\DefaultFilter;
 use OpenSoutheners\LaravelApiable\Support\Apiable;
-use Symfony\Component\HttpFoundation\HeaderUtils;
 
 /**
  * @mixin \OpenSoutheners\LaravelApiable\Http\RequestQueryObject
@@ -28,36 +27,7 @@ trait AllowsFilters
      */
     public function filters(): array
     {
-        $queryStringArr = explode('&', $this->request->server('QUERY_STRING', ''));
-        $filters = [];
-
-        foreach ($queryStringArr as $param) {
-            $filterQueryParam = HeaderUtils::parseQuery($param);
-
-            if (! is_array(head($filterQueryParam))) {
-                continue;
-            }
-
-            $filterQueryParamAttribute = head(array_keys($filterQueryParam));
-
-            if ($filterQueryParamAttribute !== 'filter') {
-                continue;
-            }
-
-            $filterQueryParam = head($filterQueryParam);
-            $filterQueryParamAttribute = head(array_keys($filterQueryParam));
-            $filterQueryParamValue = head(array_values($filterQueryParam));
-
-            if (! isset($filters[$filterQueryParamAttribute])) {
-                $filters[$filterQueryParamAttribute] = [$filterQueryParamValue];
-
-                continue;
-            }
-
-            $filters[$filterQueryParamAttribute][] = $filterQueryParamValue;
-        }
-
-        return $filters;
+        return $this->queryParameters()->get('filter', []);
     }
 
     /**
@@ -126,7 +96,7 @@ trait AllowsFilters
     }
 
     /**
-     * Get user requested filters filtered by allowed ones.
+     * Get filters filtered by user allowed.
      */
     public function userAllowedFilters(): array
     {

@@ -12,14 +12,12 @@ trait AllowsIncludes
     /**
      * @var array<string>
      */
-    protected $allowedIncludes = [];
+    protected array $allowedIncludes = [];
 
     /**
      * Get user includes relationships from request.
-     *
-     * @return array
      */
-    public function includes()
+    public function includes(): array
     {
         return array_filter(explode(',', $this->request->get('include', '')));
     }
@@ -28,16 +26,20 @@ trait AllowsIncludes
      * Allow include relationship to the response.
      *
      * @param  \OpenSoutheners\LaravelApiable\Http\AllowedInclude|array|string  $relationship
-     * @return $this
      */
-    public function allowInclude($relationship)
+    public function allowInclude($relationship): self
     {
         $this->allowedIncludes = array_merge($this->allowedIncludes, (array) $relationship);
 
         return $this;
     }
 
-    public function userAllowedIncludes()
+    /**
+     * Get includes filtered by user allowed.
+     *
+     * @return array<string>
+     */
+    public function userAllowedIncludes(): array
     {
         return $this->validator($this->includes())
             ->givingRules(false)
@@ -53,7 +55,7 @@ trait AllowsIncludes
      *
      * @return array<string>
      */
-    public function getAllowedIncludes()
+    public function getAllowedIncludes(): array
     {
         return $this->allowedIncludes;
     }

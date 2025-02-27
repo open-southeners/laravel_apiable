@@ -29,9 +29,9 @@ trait HasCollections
     /**
      * Get resource based on its zero-based position in the collection.
      *
-     * @return \OpenSoutheners\LaravelApiable\Testing\AssertableJsonApi
+     * @deprecated Use first() instead
      */
-    public function at(int $position)
+    public function at(int $position): self
     {
         if (! array_key_exists($position, $this->collection)) {
             PHPUnit::fail(sprintf('There is no item at position "%d" on the collection response.', $position));

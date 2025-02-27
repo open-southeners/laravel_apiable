@@ -10,26 +10,21 @@ use OpenSoutheners\LaravelApiable\Http\AllowedSearchFilter;
  */
 trait AllowsSearch
 {
-    /**
-     * @var bool
-     */
-    protected $allowedSearch = false;
+    protected bool $allowedSearch = false;
 
     /**
-     * @var array
+     * @var array<string, array<string, array<string>>>
      */
-    protected $allowedSearchFilters = [];
+    protected array $allowedSearchFilters = [];
 
     /**
      * Get user search query from request.
-     *
-     * @return string
      */
-    public function searchQuery()
+    public function searchQuery(): ?string
     {
         return head(array_filter(
-            $this->queryParameters()->get('q', $this->queryParameters()->get('search', [])),
-            fn ($item) => is_string($item)
+            $this->queryParameters()->value('q', $this->queryParameters()->value('search', [])),
+            fn ($item): bool => is_string($item)
         ));
     }
 
@@ -38,7 +33,7 @@ trait AllowsSearch
      *
      * @return string[]
      */
-    public function searchFilters()
+    public function searchFilters(): array
     {
         return array_reduce(array_filter(
             $this->queryParameters()->get('q', $this->queryParameters()->get('search', [])),
@@ -56,10 +51,8 @@ trait AllowsSearch
 
     /**
      * Allow fulltext search to be performed.
-     *
-     * @return $this
      */
-    public function allowSearch(bool $value = true)
+    public function allowSearch(bool $value = true): self
     {
         $this->allowedSearch = $value;
 
@@ -71,9 +64,8 @@ trait AllowsSearch
      *
      * @param  \OpenSoutheners\LaravelApiable\Http\AllowedSearchFilter|string  $attribute
      * @param  array<string>|string  $values
-     * @return $this
      */
-    public function allowSearchFilter($attribute, $values = ['*'])
+    public function allowSearchFilter($attribute, $values = ['*']): self
     {
         $this->allowedSearchFilters = array_merge_recursive(
             $this->allowedSearchFilters,
@@ -87,20 +79,16 @@ trait AllowsSearch
 
     /**
      * Check if fulltext search is allowed.
-     *
-     * @return bool
      */
-    public function isSearchAllowed()
+    public function isSearchAllowed(): bool
     {
         return $this->allowedSearch;
     }
 
     /**
      * Get user requested search filters filtered by allowed ones.
-     *
-     * @return array
      */
-    public function userAllowedSearchFilters()
+    public function userAllowedSearchFilters(): array
     {
         $searchFilters = $this->searchFilters();
 
@@ -117,9 +105,9 @@ trait AllowsSearch
     /**
      * Get list of allowed search filters.
      *
-     * @return array<string, string>
+     * @return array<string, array<string, array<string>>>
      */
-    public function getAllowedSearchFilters()
+    public function getAllowedSearchFilters(): array
     {
         return $this->allowedSearchFilters;
     }

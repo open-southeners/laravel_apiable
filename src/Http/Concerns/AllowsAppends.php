@@ -5,7 +5,7 @@ namespace OpenSoutheners\LaravelApiable\Http\Concerns;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use OpenSoutheners\LaravelApiable\Http\AllowedAppends;
-use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
+use OpenSoutheners\LaravelApiable\ServiceProvider;
 
 /**
  * @mixin \OpenSoutheners\LaravelApiable\Http\RequestQueryObject
@@ -15,10 +15,12 @@ trait AllowsAppends
     /**
      * @var array<string, array<string>>
      */
-    protected $allowedAppends = [];
+    protected array $allowedAppends = [];
 
     /**
      * Get user append attributes from request.
+     *
+     * @return array<string>
      */
     public function appends(): array
     {
@@ -45,7 +47,7 @@ trait AllowsAppends
         }
 
         if (class_exists($type) && is_subclass_of($type, Model::class)) {
-            $type = Apiable::getResourceType($type);
+            $type = ServiceProvider::getTypeForModel($type);
         }
 
         $this->allowedAppends = array_merge($this->allowedAppends, [$type => (array) $attributes]);
@@ -54,7 +56,7 @@ trait AllowsAppends
     }
 
     /**
-     * Get appends that passed the validation.
+     * Get appends filtered by user allowed.
      */
     public function userAllowedAppends(): array
     {

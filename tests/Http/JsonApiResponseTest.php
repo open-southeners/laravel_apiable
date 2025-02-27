@@ -29,6 +29,7 @@ class JsonApiResponseTest extends TestCase
         parent::setUp();
 
         $this->generateTestData();
+        $this->withoutExceptionHandling();
     }
 
     public function testFilteringByNonAllowedAttributeWillGetEverything()
@@ -320,8 +321,8 @@ class JsonApiResponseTest extends TestCase
         $response->assertJsonApi(function (AssertableJsonApi $assert) {
             $assert->isCollection();
 
-            $assert->at(0)->hasAttribute('title', 'Hello world');
-            $assert->at(1)->hasAttribute('title', 'Y esto en español');
+            $assert->first(fn (AssertableJsonApi $assert) => $assert->hasAttribute('title', 'Hello world'));
+            $assert->first(fn (AssertableJsonApi $assert) => $assert->hasAttribute('title', 'Y esto en español'));
         });
     }
 
@@ -379,9 +380,9 @@ class JsonApiResponseTest extends TestCase
         config(['apiable.responses.include_allowed' => true]);
 
         Route::get('/', function () {
-            return response()->json(JsonApiResponse::from(Post::with('tags'))->allowing([
+            return JsonApiResponse::from(Post::with('tags'))->allowing([
                 AllowedFilter::exact('status', ['Active', 'Archived']),
-            ]));
+            ]);
         });
 
         $response = $this->get('/', ['Accept' => 'application/vnd.api+json']);
@@ -427,9 +428,7 @@ class JsonApiResponseTest extends TestCase
     public function testResponseWithModifiedQueryWithCountMethodGetsRelationshipsCountsAsAttribute()
     {
         Route::get('/', function () {
-            return response()->json(
-                JsonApiResponse::from(Post::query()->withCount('tags'))
-            );
+            return JsonApiResponse::from(Post::query()->withCount('tags'));
         });
 
         $response = $this->get('/', ['Accept' => 'application/vnd.api+json']);
@@ -443,9 +442,7 @@ class JsonApiResponseTest extends TestCase
     public function testResponseWithAllowedIncludedEndsWithCountGetsRelationshipCountAsAttribute()
     {
         Route::get('/', function () {
-            return response()->json(
-                JsonApiResponse::from(Post::class)->allowInclude(['tags_count'])
-            );
+            return JsonApiResponse::from(Post::class)->allowInclude(['tags_count']);
         });
 
         $response = $this->get('/?include=tags_count', ['Accept' => 'application/vnd.api+json']);

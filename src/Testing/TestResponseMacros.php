@@ -4,6 +4,9 @@ namespace OpenSoutheners\LaravelApiable\Testing;
 
 use Closure;
 
+/**
+ * @mixin \Illuminate\Testing\TestResponse
+ */
 class TestResponseMacros
 {
     public function assertJsonApi()

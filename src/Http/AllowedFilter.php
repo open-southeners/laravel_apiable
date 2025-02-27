@@ -141,7 +141,7 @@ class AllowedFilter implements Arrayable
     public static function scoped($attribute, $values = '1'): self
     {
         return new self(
-            Apiable::config('requests.filters.enforce_scoped_names') ? Apiable::scopedFilterSuffix($attribute) : $attribute,
+            Apiable::config('requests.filters.enforce_scoped_names') ? "{$attribute}_scoped" : $attribute,
             static::SCOPE,
             $values
         );

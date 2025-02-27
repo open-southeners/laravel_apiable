@@ -5,19 +5,23 @@ namespace OpenSoutheners\LaravelApiable\Http;
 use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
 
 class QueryParamsValidator
 {
     /**
      * @var array{0: callable(string, array, array, array, array): bool, 1: \Throwable|callable}|array
      */
-    protected $validationCallbacks = [];
+    protected array $validationCallbacks = [];
 
     /**
      * Create new validator instance.
      */
-    public function __construct(protected array $params, protected bool $enforceValidation, protected array|bool $rules = [])
-    {
+    public function __construct(
+        protected array $params,
+        protected bool $enforceValidation,
+        protected array|bool $rules = []
+    ) {
         //
     }
 
@@ -73,6 +77,10 @@ class QueryParamsValidator
      */
     public function validate(): array
     {
+        if (! Apiable::config('requests.validate')) {
+            return $this->params;
+        }
+
         $filteredResults = [];
 
         foreach ($this->params as $key => $values) {

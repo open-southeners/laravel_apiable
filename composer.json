@@ -34,7 +34,7 @@
         "tomasvotruba/type-coverage": "^0.2.1"
     },
     "suggest": {
-        "hammerstone/fast-paginate": "Improves jsonApiPaginate method performance (SQL database query pagination)",
+        "aaronfrancis/fast-paginate": "Improves jsonApiPaginate method performance (SQL database query pagination)",
         "laravel/scout": "Integrate search with JsonApiResponse using its search method"
     },
     "minimum-stability": "dev",

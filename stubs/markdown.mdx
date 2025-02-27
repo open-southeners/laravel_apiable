@@ -1,0 +1,53 @@
+# {{ $title }}
+
+{{ $title }} resource endpoints documentation
+
+{{ $description }}
+
+@foreach ($endpoints as $endpoint)
+## {{ $endpoint['title'] }} @php echo '{{ tag: \''.$endpoint['routeMethod'].'\', label: \''.$endpoint['routeUrl'].'\' }}'; @endphp
+
+<Row>
+    <Col>
+        {{ $description }}
+
+        ### Optional attributes
+        <Properties>
+            @foreach ($endpoint['query'] as $queryParam)
+            <Property name="{{ $queryParam['key'] }}" type="string">
+                {{ $queryParam['description'] }} Possible values are: {{ $queryParam['values'] }}
+            </Property>
+            @endforeach
+        </Properties>
+    </Col>
+
+    <Col sticky>
+        <CodeGroup title="Request" tag="{{ $endpoint['action'] }}" label="{{ $endpoint['routeUrl'] }}">
+
+        ```bash @{{ title: 'cURL' }}
+        curl -G {{ $endpoint['routeFullUrl'] }} \
+            -H "Authorization: Bearer {token}"
+        ```
+
+        </CodeGroup>
+
+        ```json @{{ title: 'Response' }}
+        {
+            "data": [
+                {
+                    "id": "1",
+                    "type": "{{ $name }}"
+                },
+                // ...
+            ],
+            "meta": {},
+            "links": {}
+        }
+        ```
+    </Col>
+</Row>
+
+@unless ($loop->last)
+---
+@endunless
+@endforeach

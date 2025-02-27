@@ -3,7 +3,7 @@
 namespace OpenSoutheners\LaravelApiable\Testing\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
-use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
+use OpenSoutheners\LaravelApiable\ServiceProvider;
 use PHPUnit\Framework\Assert as PHPUnit;
 
 /**
@@ -29,7 +29,7 @@ trait HasRelationships
     public function atRelation(Model $model)
     {
         $item = head(array_filter($this->includeds, function ($included) use ($model) {
-            return $included['type'] === Apiable::getResourceType($model) && $included['id'] == $model->getKey();
+            return $included['type'] === ServiceProvider::getTypeForModel($model) && $included['id'] == $model->getKey();
         }));
 
         return new self($item['id'], $item['type'], $item['attributes'], $item['relationships'] ?? [], $this->includeds);
@@ -44,7 +44,7 @@ trait HasRelationships
      */
     public function hasAnyRelationships($name, $withIncluded = false)
     {
-        $type = Apiable::getResourceType($name);
+        $type = ServiceProvider::getTypeForModel($name);
 
         PHPUnit::assertTrue(
             count($this->filterResources($this->relationships, $type)) > 0,
@@ -70,7 +70,7 @@ trait HasRelationships
      */
     public function hasNotAnyRelationships($name, $withIncluded = false)
     {
-        $type = Apiable::getResourceType($name);
+        $type = ServiceProvider::getTypeForModel($name);
 
         PHPUnit::assertFalse(
             count($this->filterResources($this->relationships, $type)) > 0,
@@ -95,7 +95,7 @@ trait HasRelationships
      */
     public function hasRelationshipWith(Model $model, $withIncluded = false)
     {
-        $type = Apiable::getResourceType($model);
+        $type = ServiceProvider::getTypeForModel($model);
 
         PHPUnit::assertTrue(
             count($this->filterResources($this->relationships, $type, $model->getKey())) > 0,
@@ -120,7 +120,7 @@ trait HasRelationships
      */
     public function hasNotRelationshipWith(Model $model, $withIncluded = false)
     {
-        $type = Apiable::getResourceType($model);
+        $type = ServiceProvider::getTypeForModel($model);
 
         PHPUnit::assertFalse(
             count($this->filterResources($this->relationships, $type, $model->getKey())) > 0,

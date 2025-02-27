@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\MissingValue;
 use Illuminate\Pagination\AbstractPaginator;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use OpenSoutheners\LaravelApiable\Contracts\JsonApiable;
 use OpenSoutheners\LaravelApiable\Handler;
 use OpenSoutheners\LaravelApiable\Http\JsonApiResponse;
@@ -18,11 +16,6 @@ use Throwable;
 
 class Apiable
 {
-    /**
-     * @var array<class-string<\Illuminate\Database\Eloquent\Model>, string>
-     */
-    protected static $modelResourceTypeMap = [];
-
     /**
      * Get package prefixed config by key.
      */
@@ -44,27 +37,6 @@ class Apiable
             $resource instanceof Model, $resource instanceof MissingValue => new JsonApiResource($resource),
             default => new JsonApiCollection(Collection::make([])),
         };
-    }
-
-    /**
-     * Determine default resource type from giving model.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model|class-string<\Illuminate\Database\Eloquent\Model>  $model
-     */
-    public static function resourceTypeForModel(Model|string $model): string
-    {
-        return Str::snake(class_basename(is_string($model) ? $model : get_class($model)));
-    }
-
-    /**
-     * Get resource type from a model.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model|class-string<\Illuminate\Database\Eloquent\Model>  $model
-     */
-    public static function getResourceType(Model|string $model): string
-    {
-        return static::$modelResourceTypeMap[is_string($model) ? $model : get_class($model)]
-            ?? static::resourceTypeForModel($model);
     }
 
     /**
@@ -92,51 +64,6 @@ class Apiable
         }
 
         return $response;
-    }
-
-    /**
-     * Add models to JSON:API types mapping to the application.
-     *
-     * @param  array<class-string<\Illuminate\Database\Eloquent\Model>>|array<class-string<\Illuminate\Database\Eloquent\Model>, string>  $models
-     * @return void
-     */
-    public static function modelResourceTypeMap(array $models = [])
-    {
-        if (! Arr::isAssoc($models)) {
-            $models = array_map(fn ($model) => static::resourceTypeForModel($model), $models);
-        }
-
-        static::$modelResourceTypeMap = $models;
-    }
-
-    /**
-     * Get models to JSON:API types mapping.
-     *
-     * @return array<class-string<\Illuminate\Database\Eloquent\Model>, string>
-     */
-    public static function getModelResourceTypeMap()
-    {
-        return static::$modelResourceTypeMap;
-    }
-
-    /**
-     * Get model class from given resource type.
-     *
-     * @return \Illuminate\Database\Eloquent\Model|false
-     */
-    public static function getModelFromResourceType(string $type)
-    {
-        return array_flip(static::$modelResourceTypeMap)[$type] ?? false;
-    }
-
-    /**
-     * Add suffix to filter attribute/scope name.
-     *
-     * @return string
-     */
-    public static function scopedFilterSuffix(string $value)
-    {
-        return "{$value}_scoped";
     }
 
     /**

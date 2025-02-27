@@ -4,6 +4,8 @@ namespace OpenSoutheners\LaravelApiable\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;
+use OpenSoutheners\LaravelApiable\Http\Request;
+use OpenSoutheners\LaravelApiable\ServiceProvider;
 use OpenSoutheners\LaravelApiable\Support\Facades\Apiable;
 
 /**
@@ -74,7 +76,7 @@ class JsonApiResource extends JsonResource
     {
         return [
             $this->resource->getKeyName() => (string) $this->resource->getKey(),
-            'type' => Apiable::getResourceType($this->resource),
+            'type' => ServiceProvider::getTypeForModel(get_class($this->resource)),
         ];
     }
 
